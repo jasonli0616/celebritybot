@@ -1,8 +1,11 @@
 """Visualization"""
+import random
 
 from graph import Graph
 import networkx as nx
 import plotly
+
+from vertex import VertexKind
 
 
 def visualize_graph_plotly(g: Graph, n: int):
@@ -10,20 +13,27 @@ def visualize_graph_plotly(g: Graph, n: int):
     If g has less than n vertices, plot all vertices."""
 
     vis = nx.DiGraph()
-    word_vertices = [v for v in g.vertices.values() if isinstance(v.word, str)]
+    vertices = [v for v in g.vertices.values() if v.kind == VertexKind.NGRAM]
     max_vertices = n
     added_vertices = []
+    NUM_NEIGHBOURS = 3
 
     # Make network
-    for v in word_vertices:
-        if len(added_vertices) == max_vertices:
-            break
-        else:
-            vis.add_node(v.word)
-            added_vertices.append(v)
+    for _ in range(max_vertices // NUM_NEIGHBOURS):
+        v = random.choice(vertices)
+        vertices.remove(v)
+
+        vis.add_node(v.word)
+        added_vertices.append(v)
+
     for v in added_vertices:
-        for u in v.neighbours:
-            if u in added_vertices:
+        neighbours_vertices = list(v.neighbours.keys())
+        if len(neighbours_vertices) >= NUM_NEIGHBOURS:
+            for _ in range(NUM_NEIGHBOURS):
+                u = random.choice(neighbours_vertices)
+                neighbours_vertices.remove(u)
+                if u not in added_vertices:
+                    added_vertices.append(u)
                 vis.add_edge(v.word, u.word, weight=v.neighbours[u])
     pos = nx.spring_layout(vis, weight="weight", seed=42, iterations=50)
 
